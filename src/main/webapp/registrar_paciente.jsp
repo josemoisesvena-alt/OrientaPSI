@@ -20,9 +20,7 @@
 
     <meta charset="UTF-8">
 
-    <title>
-        OrientaPsi - Registrar Psicólogo
-    </title>
+    <title>OrientaPsi - Registrar Paciente</title>
 
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -38,15 +36,16 @@
 
     <div class="card shadow-sm border-0">
 
-        <div class="card-header bg-primary text-white py-3">
+        <div class="card-header bg-success text-white py-3">
 
             <h4 class="mb-0 fw-bold">
 
-                Registrar Nuevo Psicólogo
+                Registrar Nuevo Paciente
 
             </h4>
 
         </div>
+
 
         <div class="card-body p-4">
 
@@ -59,7 +58,7 @@
 
                 <div class="alert alert-warning">
 
-                    Completa correctamente todos los campos obligatorios.
+                    Completa todos los campos obligatorios.
 
                 </div>
 
@@ -70,19 +69,8 @@
 
                 <div class="alert alert-warning">
 
-                    La contraseña debe tener al menos 6 caracteres.
-
-                </div>
-
-            <% } %>
-
-
-            <% if ("experiencia".equals(error)) { %>
-
-                <div class="alert alert-warning">
-
-                    Los años de experiencia deben ser un número válido
-                    mayor o igual a cero.
+                    La contraseña debe tener
+                    al menos 6 caracteres.
 
                 </div>
 
@@ -93,15 +81,14 @@
 
                 <div class="alert alert-danger">
 
-                    No se pudo registrar al psicólogo.
+                    No se pudo registrar al paciente.
 
                     Revisa que el correo electrónico
-                    y el número de colegiatura no estén repetidos.
+                    no esté registrado previamente.
 
                 </div>
 
             <% } %>
-
 
 
             <!-- ========================= -->
@@ -109,7 +96,7 @@
             <!-- ========================= -->
 
             <form
-                    action="PsicologoServlet"
+                    action="PacienteServlet"
                     method="POST">
 
 
@@ -192,112 +179,29 @@
 
                     <div class="form-text">
 
-                        Debe tener al menos 6 caracteres.
+                        Mínimo 6 caracteres.
 
                     </div>
 
                 </div>
 
 
-                <!-- COLEGIATURA -->
-
-                <div class="mb-3">
-
-                    <label class="form-label fw-bold">
-
-                        Número de Colegiatura
-
-                    </label>
-
-                    <input
-                            type="text"
-                            name="colegiatura"
-                            class="form-control"
-                            maxlength="30"
-                            required>
-
-                </div>
-
-
-                <!-- EXPERIENCIA -->
-
-                <div class="mb-3">
-
-                    <label class="form-label fw-bold">
-
-                        Años de Experiencia
-
-                    </label>
-
-                    <input
-                            type="number"
-                            name="experiencia"
-                            class="form-control"
-                            min="0"
-                            required>
-
-                </div>
-
-
-                <!-- PRESENTACIÓN -->
-
-                <div class="mb-3">
-
-                    <label class="form-label fw-bold">
-
-                        Presentación / Biografía
-
-                    </label>
-
-                    <textarea
-                            name="presentacion"
-                            class="form-control"
-                            rows="3"
-                            required></textarea>
-
-                </div>
-
-
-                <!-- MODALIDAD -->
+                <!-- FECHA DE NACIMIENTO -->
 
                 <div class="mb-4">
 
                     <label class="form-label fw-bold">
 
-                        Modalidad
+                        Fecha de Nacimiento
 
                     </label>
 
-                    <select
-                            name="modalidad"
-                            class="form-select"
+                    <input
+                            type="date"
+                            name="fechaNacimiento"
+                            id="fechaNacimiento"
+                            class="form-control"
                             required>
-
-                        <option value="">
-
-                            -- Selecciona una modalidad --
-
-                        </option>
-
-                        <option value="VIRTUAL">
-
-                            VIRTUAL
-
-                        </option>
-
-                        <option value="PRESENCIAL">
-
-                            PRESENCIAL
-
-                        </option>
-
-                        <option value="AMBAS">
-
-                            AMBAS
-
-                        </option>
-
-                    </select>
 
                 </div>
 
@@ -316,13 +220,14 @@
 
                     <button
                             type="submit"
-                            class="btn btn-primary fw-bold">
+                            class="btn btn-success fw-bold">
 
-                        Registrar Psicólogo
+                        Registrar Paciente
 
                     </button>
 
                 </div>
+
 
             </form>
 
@@ -331,6 +236,33 @@
     </div>
 
 </div>
+
+
+<script>
+
+    // Evitar fechas futuras
+
+    const fechaNacimiento =
+            document.getElementById("fechaNacimiento");
+
+    const hoy =
+            new Date();
+
+    const anio =
+            hoy.getFullYear();
+
+    const mes =
+            String(hoy.getMonth() + 1)
+                    .padStart(2, "0");
+
+    const dia =
+            String(hoy.getDate())
+                    .padStart(2, "0");
+
+    fechaNacimiento.max =
+            anio + "-" + mes + "-" + dia;
+
+</script>
 
 
 <script

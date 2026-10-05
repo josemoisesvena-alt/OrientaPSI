@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,70 +20,329 @@ import java.sql.SQLException;
 public class ReservarCitaServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(
+            HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession();
-        Usuario usuario = (Usuario) session.getAttribute("usuarioLogueado");
+        request.setCharacterEncoding("UTF-8");
 
+        HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
+        Usuario usuario =
+                (Usuario) session.getAttribute("usuarioLogueado");
+
+        // Solo pacientes
         if (usuario == null || usuario.getIdRol() != 3) {
             response.sendRedirect("index.jsp");
             return;
         }
 
-        String idHorarioStr = request.getParameter("idHorario");
-        String motivo = request.getParameter("motivo");
+        String idHorarioStr =
+                request.getParameter("idHorario");
 
-        if (idHorarioStr == null || idHorarioStr.isEmpty() || motivo == null || motivo.isEmpty()) {
-            response.sendRedirect("paciente_dashboard.jsp?reserva=error");
+        String motivo =
+                request.getParameter("motivo");
+
+
+        // ==========================================
+        // VALIDAR CAMPOS
+        // ==========================================
+
+        if (idHorarioStr == null
+                || idHorarioStr.isBlank()
+                || motivo == null
+                || motivo.isBlank()) {
+
+            response.sendRedirect(
+                    "paciente_dashboard.jsp?reserva=error"
+            );
+
             return;
         }
 
-        int idHorario = Integer.parseInt(idHorarioStr);
 
-        try (Connection con = ConexionBD.getConexion()) {
-            con.setAutoCommit(false); // Transacción segura
+        motivo = motivo.trim();
 
-            // 1. Obtener el id_paciente correspondiente al id_usuario logueado
+        // Tu columna motivo_consulta es VARCHAR(250)
+        if (motivo.length() > 250) {
+
+            response.sendRedirect(
+                    "paciente_dashboard.jsp?reserva=error"
+            );
+
+            return;
+        }
+
+
+        int idHorario;
+
+        try {
+
+            idHorario =
+                    Integer.parseInt(idHorarioStr);
+
+        } catch (NumberFormatException e) {
+
+            response.sendRedirect(
+                    "paciente_dashboard.jsp?reserva=error"
+            );
+
+            return;
+        }
+
+
+        Connection con = null;
+
+        try {
+
+            con = ConexionBD.getConexion();
+
+            if (con == null) {
+
+                response.sendRedirect(
+                        "paciente_dashboard.jsp?reserva=error"
+                );
+
+                return;
+            }
+
+
+            // Iniciar transacción
+            con.setAutoCommit(false);
+
+
+            // ==========================================
+            // 1. OBTENER ID DEL PACIENTE
+            // ==========================================
+
             int idPaciente = -1;
-            String sqlPaciente = "SELECT id_paciente FROM PACIENTE WHERE id_usuario = ?";
-            try (PreparedStatement psP = con.prepareStatement(sqlPaciente)) {
-                psP.setInt(1, usuario.getIdUsuario());
-                try (ResultSet rsP = psP.executeQuery()) {
-                    if (rsP.next()) {
-                        idPaciente = rsP.getInt("id_paciente");
+
+            String sqlPaciente =
+                    "SELECT id_paciente " +
+                            "FROM PACIENTE " +
+                            "WHERE id_usuario = ? " +
+                            "AND estado = 'ACTIVO'";
+
+
+            try (PreparedStatement psPaciente =
+                         con.prepareStatement(sqlPaciente)) {
+
+                psPaciente.setInt(
+                        1,
+                        usuario.getIdUsuario()
+                );
+
+
+                try (ResultSet rs =
+                             psPaciente.executeQuery()) {
+
+                    if (rs.next()) {
+
+                        idPaciente =
+                                rs.getInt("id_paciente");
                     }
                 }
             }
 
+
+            // No existe perfil de paciente
             if (idPaciente == -1) {
+
                 con.rollback();
-                response.sendRedirect("paciente_dashboard.jsp?reserva=error");
+
+                response.sendRedirect(
+                        "paciente_dashboard.jsp?reserva=error"
+                );
+
                 return;
             }
 
-            // 2. Insertar la cita con estado PENDIENTE
-            String sqlCita = "INSERT INTO CITA (id_paciente, id_horario, motivo_consulta, estado) VALUES (?, ?, ?, 'PENDIENTE')";
-            try (PreparedStatement psC = con.prepareStatement(sqlCita)) {
-                psC.setInt(1, idPaciente);
-                psC.setInt(2, idHorario);
-                psC.setString(3, motivo);
-                psC.executeUpdate();
+
+            // ==========================================
+            // 2. BLOQUEAR / OCUPAR EL HORARIO
+            // ==========================================
+            //
+            // Esto es lo más importante.
+            //
+            // Solo cambia a OCUPADO si todavía está
+            // DISPONIBLE.
+            //
+            // Si otro paciente acaba de reservarlo,
+            // executeUpdate() devolverá 0.
+            // ==========================================
+
+            String sqlHorario =
+                    "UPDATE HORARIO " +
+                            "SET estado = 'OCUPADO' " +
+                            "WHERE id_horario = ? " +
+                            "AND estado = 'DISPONIBLE' " +
+                            "AND fecha >= CURDATE()";
+
+
+            int horarioActualizado;
+
+
+            try (PreparedStatement psHorario =
+                         con.prepareStatement(sqlHorario)) {
+
+                psHorario.setInt(
+                        1,
+                        idHorario
+                );
+
+
+                horarioActualizado =
+                        psHorario.executeUpdate();
             }
 
-            // 3. Actualizar el horario a OCUPADO para que ya no aparezca disponible
-            String sqlHorario = "UPDATE HORARIO SET estado = 'OCUPADO' WHERE id_horario = ?";
-            try (PreparedStatement psH = con.prepareStatement(sqlHorario)) {
-                psH.setInt(1, idHorario);
-                psH.executeUpdate();
+
+            // Si devuelve 0 significa:
+            // - ya está ocupado
+            // - no existe
+            // - o es una fecha pasada
+
+            if (horarioActualizado == 0) {
+
+                con.rollback();
+
+                response.sendRedirect(
+                        "paciente_dashboard.jsp?reserva=ocupado"
+                );
+
+                return;
             }
 
-            con.commit(); // Confirmar cambios
-            response.sendRedirect("paciente_dashboard.jsp?reserva=success");
+
+            // ==========================================
+            // 3. INSERTAR LA CITA
+            // ==========================================
+
+            String sqlCita =
+                    "INSERT INTO CITA " +
+                            "(id_paciente, id_horario, motivo_consulta, estado) " +
+                            "VALUES (?, ?, ?, 'PENDIENTE')";
+
+
+            try (PreparedStatement psCita =
+                         con.prepareStatement(sqlCita)) {
+
+                psCita.setInt(
+                        1,
+                        idPaciente
+                );
+
+                psCita.setInt(
+                        2,
+                        idHorario
+                );
+
+                psCita.setString(
+                        3,
+                        motivo
+                );
+
+
+                int filas =
+                        psCita.executeUpdate();
+
+
+                if (filas == 0) {
+
+                    con.rollback();
+
+                    response.sendRedirect(
+                            "paciente_dashboard.jsp?reserva=error"
+                    );
+
+                    return;
+                }
+            }
+
+
+            // ==========================================
+            // 4. CONFIRMAR TRANSACCIÓN
+            // ==========================================
+
+            con.commit();
+
+
+            response.sendRedirect(
+                    "paciente_dashboard.jsp?reserva=success"
+            );
+
 
         } catch (SQLException e) {
+
+            // ==========================================
+            // ROLLBACK SI OCURRE ALGÚN ERROR
+            // ==========================================
+
+            if (con != null) {
+
+                try {
+
+                    con.rollback();
+
+                } catch (SQLException rollbackError) {
+
+                    rollbackError.printStackTrace();
+                }
+            }
+
+
+            System.err.println(
+                    "Error al reservar cita: "
+                            + e.getMessage()
+            );
+
             e.printStackTrace();
-            response.sendRedirect("paciente_dashboard.jsp?reserva=error");
+
+
+            /*
+             * MySQL error 1062 =
+             * clave duplicada.
+             *
+             * Como CITA.id_horario es UNIQUE,
+             * también tenemos protección desde MySQL.
+             */
+            if (e.getErrorCode() == 1062) {
+
+                response.sendRedirect(
+                        "paciente_dashboard.jsp?reserva=ocupado"
+                );
+
+            } else {
+
+                response.sendRedirect(
+                        "paciente_dashboard.jsp?reserva=error"
+                );
+            }
+
+
+        } finally {
+
+            // ==========================================
+            // CERRAR CONEXIÓN
+            // ==========================================
+
+            if (con != null) {
+
+                try {
+
+                    con.setAutoCommit(true);
+                    con.close();
+
+                } catch (SQLException e) {
+
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
