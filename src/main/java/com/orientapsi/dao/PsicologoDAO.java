@@ -12,15 +12,20 @@ import java.sql.Statement;
 
 public class PsicologoDAO {
 
-    public boolean registrarPsicologo(
+
+    // =========================================================
+    // REGISTRAR PSICÓLOGO
+    // =========================================================
+    public String registrarPsicologo(
             String nombres,
             String apellidos,
             String correo,
             String clave,
             String colegiatura,
+            int experiencia,
             String presentacion,
-            String modalidad,
-            int experiencia) {
+            String modalidad
+    ) {
 
         Connection con = null;
 
@@ -29,14 +34,87 @@ public class PsicologoDAO {
             con = ConexionBD.getConexion();
 
             if (con == null) {
-                return false;
+                return "error";
             }
 
             con.setAutoCommit(false);
 
-            // ==========================================
-            // 1. CIFRAR CONTRASEÑA
-            // ==========================================
+
+            // =========================================
+            // 1. VALIDAR CORREO DUPLICADO
+            // =========================================
+
+            String sqlCorreo =
+                    "SELECT id_usuario " +
+                            "FROM USUARIO " +
+                            "WHERE correo = ?";
+
+
+            try (
+                    PreparedStatement ps =
+                            con.prepareStatement(sqlCorreo)
+            ) {
+
+                ps.setString(
+                        1,
+                        correo.trim().toLowerCase()
+                );
+
+
+                try (
+                        ResultSet rs =
+                                ps.executeQuery()
+                ) {
+
+                    if (rs.next()) {
+
+                        con.rollback();
+
+                        return "duplicado";
+                    }
+                }
+            }
+
+
+            // =========================================
+            // 2. VALIDAR COLEGIATURA DUPLICADA
+            // =========================================
+
+            String sqlColegiatura =
+                    "SELECT id_psicologo " +
+                            "FROM PSICOLOGO " +
+                            "WHERE numero_colegiatura = ?";
+
+
+            try (
+                    PreparedStatement ps =
+                            con.prepareStatement(sqlColegiatura)
+            ) {
+
+                ps.setString(
+                        1,
+                        colegiatura.trim()
+                );
+
+
+                try (
+                        ResultSet rs =
+                                ps.executeQuery()
+                ) {
+
+                    if (rs.next()) {
+
+                        con.rollback();
+
+                        return "duplicado";
+                    }
+                }
+            }
+
+
+            // =========================================
+            // 3. CIFRAR CONTRASEÑA
+            // =========================================
 
             String claveHash =
                     BCrypt.hashpw(
@@ -45,14 +123,15 @@ public class PsicologoDAO {
                     );
 
 
-            // ==========================================
-            // 2. REGISTRAR USUARIO
-            // ==========================================
+            // =========================================
+            // 4. REGISTRAR USUARIO
+            // =========================================
 
             String sqlUsuario =
                     "INSERT INTO USUARIO " +
                             "(id_rol, nombres, apellidos, correo, clave_hash, estado) " +
                             "VALUES (2, ?, ?, ?, ?, 'ACTIVO')";
+
 
             int idUsuario;
 
@@ -94,7 +173,7 @@ public class PsicologoDAO {
 
                     con.rollback();
 
-                    return false;
+                    return "error";
                 }
 
 
@@ -107,8 +186,9 @@ public class PsicologoDAO {
 
                         con.rollback();
 
-                        return false;
+                        return "error";
                     }
+
 
                     idUsuario =
                             rs.getInt(1);
@@ -116,9 +196,9 @@ public class PsicologoDAO {
             }
 
 
-            // ==========================================
-            // 3. REGISTRAR PSICÓLOGO
-            // ==========================================
+            // =========================================
+            // 5. REGISTRAR PSICÓLOGO
+            // =========================================
 
             String sqlPsicologo =
                     "INSERT INTO PSICOLOGO " +
@@ -143,7 +223,7 @@ public class PsicologoDAO {
 
                 psPsicologo.setString(
                         3,
-                        presentacion
+                        presentacion.trim()
                 );
 
                 psPsicologo.setString(
@@ -165,25 +245,21 @@ public class PsicologoDAO {
 
                     con.rollback();
 
-                    return false;
+                    return "error";
                 }
             }
 
 
-            // ==========================================
-            // 4. CONFIRMAR TRANSACCIÓN
-            // ==========================================
+            // =========================================
+            // 6. CONFIRMAR TRANSACCIÓN
+            // =========================================
 
             con.commit();
 
-            return true;
+            return "success";
 
 
         } catch (SQLException e) {
-
-            // ==========================================
-            // ROLLBACK
-            // ==========================================
 
             if (con != null) {
 
@@ -205,20 +281,24 @@ public class PsicologoDAO {
 
             e.printStackTrace();
 
-            return false;
+
+            if (e.getErrorCode() == 1062) {
+
+                return "duplicado";
+            }
+
+
+            return "error";
 
 
         } finally {
-
-            // ==========================================
-            // CERRAR CONEXIÓN
-            // ==========================================
 
             if (con != null) {
 
                 try {
 
                     con.setAutoCommit(true);
+
                     con.close();
 
                 } catch (SQLException e) {
@@ -231,10 +311,8 @@ public class PsicologoDAO {
 
 
     // =========================================================
-    // OBTENER EL ID DEL PSICÓLOGO
-    // A PARTIR DEL ID DEL USUARIO
+    // OBTENER ID DEL PSICÓLOGO POR ID DE USUARIO
     // =========================================================
-
     public int obtenerIdPsicologoPorUsuario(int idUsuario) {
 
         String sql =

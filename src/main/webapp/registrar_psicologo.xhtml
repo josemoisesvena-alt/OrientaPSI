@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="jakarta.faces.html"
+        xmlns:f="jakarta.faces.core">
+
+<f:metadata>
+
+    <f:viewAction
+            action="#{psicologoBean.verificarAccesoAdmin}"/>
+
+</f:metadata>
+
+
+<h:head>
+
+    <meta charset="UTF-8"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1"/>
+
+    <title>
+        OrientaPsi - Registrar Psicólogo
+    </title>
+
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"/>
+
+
+    <style>
+
+        body {
+            background-color: #f4f6f8;
+        }
+
+        .main-card {
+            border-radius: 15px;
+        }
+
+    </style>
+
+</h:head>
+
+
+<h:body>
+
+
+    <!-- ========================================= -->
+    <!-- NAVBAR -->
+    <!-- ========================================= -->
+
+    <nav class="navbar navbar-dark bg-dark">
+
+        <div class="container">
+
+            <h:link
+                    outcome="admin"
+                    styleClass="navbar-brand fw-bold text-decoration-none">
+
+                OrientaPsi - Admin
+
+            </h:link>
+
+
+            <span class="text-white">
+
+                #{loginBean.usuarioLogueado.nombres}
+                #{loginBean.usuarioLogueado.apellidos}
+
+            </span>
+
+        </div>
+
+    </nav>
+
+
+    <div
+            class="container py-5"
+            style="max-width: 700px;">
+
+
+        <div class="card shadow-sm border-0 main-card">
+
+
+            <!-- ========================================= -->
+            <!-- ENCABEZADO -->
+            <!-- ========================================= -->
+
+            <div class="card-header bg-primary text-white p-4">
+
+                <h4 class="mb-0 fw-bold">
+
+                    Registrar Nuevo Psicólogo
+
+                </h4>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+
+                <!-- ========================================= -->
+                <!-- MENSAJES -->
+                <!-- ========================================= -->
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'success'}">
+
+                    <div class="alert alert-success">
+
+                        El psicólogo fue registrado correctamente.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'campos'}">
+
+                    <div class="alert alert-warning">
+
+                        Completa correctamente todos
+                        los campos obligatorios.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'clave'}">
+
+                    <div class="alert alert-warning">
+
+                        La contraseña debe tener
+                        al menos 6 caracteres.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'experiencia'}">
+
+                    <div class="alert alert-warning">
+
+                        Los años de experiencia deben
+                        ser mayor o igual a cero.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'duplicado'}">
+
+                    <div class="alert alert-warning">
+
+                        El correo electrónico o el número
+                        de colegiatura ya se encuentra registrado.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <h:panelGroup
+                        rendered="#{param.resultado eq 'error'}">
+
+                    <div class="alert alert-danger">
+
+                        No se pudo registrar al psicólogo.
+
+                    </div>
+
+                </h:panelGroup>
+
+
+                <!-- ========================================= -->
+                <!-- FORMULARIO JSF -->
+                <!-- ========================================= -->
+
+                <h:form id="formPsicologo">
+
+
+                    <!-- NOMBRES -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="nombres"
+                                value="Nombres"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputText
+                                id="nombres"
+                                value="#{psicologoBean.nombres}"
+                                maxlength="80"
+                                required="true"
+                                requiredMessage="Ingrese los nombres."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="nombres"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- APELLIDOS -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="apellidos"
+                                value="Apellidos"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputText
+                                id="apellidos"
+                                value="#{psicologoBean.apellidos}"
+                                maxlength="80"
+                                required="true"
+                                requiredMessage="Ingrese los apellidos."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="apellidos"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- CORREO -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="correo"
+                                value="Correo Electrónico"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputText
+                                id="correo"
+                                type="email"
+                                value="#{psicologoBean.correo}"
+                                maxlength="120"
+                                required="true"
+                                requiredMessage="Ingrese el correo electrónico."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="correo"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- CONTRASEÑA -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="clave"
+                                value="Contraseña"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputSecret
+                                id="clave"
+                                value="#{psicologoBean.clave}"
+                                required="true"
+                                requiredMessage="Ingrese una contraseña."
+                                styleClass="form-control"/>
+
+
+                        <div class="form-text">
+
+                            Debe tener al menos 6 caracteres.
+
+                        </div>
+
+
+                        <h:message
+                                for="clave"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- COLEGIATURA -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="colegiatura"
+                                value="Número de Colegiatura"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputText
+                                id="colegiatura"
+                                value="#{psicologoBean.colegiatura}"
+                                maxlength="30"
+                                required="true"
+                                requiredMessage="Ingrese la colegiatura."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="colegiatura"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- EXPERIENCIA -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="experiencia"
+                                value="Años de Experiencia"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputText
+                                id="experiencia"
+                                type="number"
+                                value="#{psicologoBean.experiencia}"
+                                required="true"
+                                requiredMessage="Ingrese los años de experiencia."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="experiencia"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- PRESENTACIÓN -->
+
+                    <div class="mb-3">
+
+                        <h:outputLabel
+                                for="presentacion"
+                                value="Presentación / Biografía"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:inputTextarea
+                                id="presentacion"
+                                value="#{psicologoBean.presentacion}"
+                                rows="3"
+                                required="true"
+                                requiredMessage="Ingrese la presentación."
+                                styleClass="form-control"/>
+
+
+                        <h:message
+                                for="presentacion"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- MODALIDAD -->
+
+                    <div class="mb-4">
+
+                        <h:outputLabel
+                                for="modalidad"
+                                value="Modalidad"
+                                styleClass="form-label fw-bold"/>
+
+
+                        <h:selectOneMenu
+                                id="modalidad"
+                                value="#{psicologoBean.modalidad}"
+                                required="true"
+                                requiredMessage="Seleccione una modalidad."
+                                styleClass="form-select">
+
+
+                            <f:selectItem
+                                    itemValue=""
+                                    itemLabel="-- Selecciona una modalidad --"/>
+
+
+                            <f:selectItem
+                                    itemValue="VIRTUAL"
+                                    itemLabel="VIRTUAL"/>
+
+
+                            <f:selectItem
+                                    itemValue="PRESENCIAL"
+                                    itemLabel="PRESENCIAL"/>
+
+
+                            <f:selectItem
+                                    itemValue="AMBAS"
+                                    itemLabel="AMBAS"/>
+
+
+                        </h:selectOneMenu>
+
+
+                        <h:message
+                                for="modalidad"
+                                styleClass="text-danger small"/>
+
+                    </div>
+
+
+                    <!-- ========================================= -->
+                    <!-- BOTONES -->
+                    <!-- ========================================= -->
+
+                    <div class="d-flex justify-content-between">
+
+
+                        <h:link
+                                outcome="admin"
+                                value="Cancelar"
+                                styleClass="btn btn-secondary"/>
+
+
+                        <h:commandButton
+                                value="Registrar Psicólogo"
+                                action="#{psicologoBean.registrar}"
+                                styleClass="btn btn-primary fw-bold"/>
+
+
+                    </div>
+
+
+                </h:form>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+</h:body>
+
+</html>

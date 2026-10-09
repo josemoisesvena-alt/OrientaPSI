@@ -449,4 +449,219 @@ public class CitaDAO {
 
         return null;
     }
+    // =========================================================
+// OBTENER CITAS DEL PACIENTE POR ID DE USUARIO
+// =========================================================
+    public List<Cita> obtenerCitasPorUsuario(int idUsuario) {
+
+        List<Cita> lista = new ArrayList<>();
+
+        String sql =
+                "SELECT " +
+                        "c.id_cita, " +
+                        "c.id_paciente, " +
+                        "c.motivo_consulta, " +
+                        "c.estado, " +
+                        "CONCAT(h.fecha, ' ', h.hora_inicio) AS fecha_hora, " +
+                        "uPsi.nombres AS nombre_psicologo, " +
+                        "uPsi.apellidos AS apellido_psicologo, " +
+                        "uPac.nombres AS nombre_paciente, " +
+                        "uPac.apellidos AS apellido_paciente " +
+
+                        "FROM CITA c " +
+
+                        "INNER JOIN HORARIO h " +
+                        "ON c.id_horario = h.id_horario " +
+
+                        "INNER JOIN PSICOLOGO p " +
+                        "ON h.id_psicologo = p.id_psicologo " +
+
+                        "INNER JOIN USUARIO uPsi " +
+                        "ON p.id_usuario = uPsi.id_usuario " +
+
+                        "INNER JOIN PACIENTE pa " +
+                        "ON c.id_paciente = pa.id_paciente " +
+
+                        "INNER JOIN USUARIO uPac " +
+                        "ON pa.id_usuario = uPac.id_usuario " +
+
+                        "WHERE pa.id_usuario = ? " +
+
+                        "ORDER BY h.fecha DESC, h.hora_inicio DESC";
+
+
+        try (
+                Connection con = ConexionBD.getConexion();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+
+            ps.setInt(1, idUsuario);
+
+
+            try (
+                    ResultSet rs = ps.executeQuery()
+            ) {
+
+                while (rs.next()) {
+
+                    Cita c = new Cita();
+
+                    c.setIdCita(
+                            rs.getInt("id_cita")
+                    );
+
+                    c.setIdPaciente(
+                            rs.getInt("id_paciente")
+                    );
+
+                    c.setMotivo(
+                            rs.getString("motivo_consulta")
+                    );
+
+                    c.setEstado(
+                            rs.getString("estado")
+                    );
+
+                    c.setFechaHora(
+                            rs.getTimestamp("fecha_hora")
+                    );
+
+                    c.setNombrePsicologo(
+                            rs.getString("nombre_psicologo")
+                    );
+
+                    c.setApellidoPsicologo(
+                            rs.getString("apellido_psicologo")
+                    );
+
+                    c.setNombrePaciente(
+                            rs.getString("nombre_paciente")
+                    );
+
+                    c.setApellidoPaciente(
+                            rs.getString("apellido_paciente")
+                    );
+
+                    lista.add(c);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.err.println(
+                    "Error al obtener citas del paciente: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+        }
+
+
+        return lista;
+    }
+    // =========================================================
+// OBTENER CITAS DEL PSICÓLOGO POR ID DE USUARIO
+// =========================================================
+    public List<Cita> obtenerCitasPorPsicologo(int idUsuario) {
+
+        List<Cita> lista = new ArrayList<>();
+
+        String sql =
+                "SELECT " +
+                        "c.id_cita, " +
+                        "c.id_paciente, " +
+                        "c.motivo_consulta, " +
+                        "c.estado, " +
+                        "CONCAT(h.fecha, ' ', h.hora_inicio) AS fecha_hora, " +
+                        "uPsi.nombres AS nombre_psicologo, " +
+                        "uPsi.apellidos AS apellido_psicologo, " +
+                        "uPac.nombres AS nombre_paciente, " +
+                        "uPac.apellidos AS apellido_paciente " +
+
+                        "FROM CITA c " +
+
+                        "INNER JOIN HORARIO h " +
+                        "ON c.id_horario = h.id_horario " +
+
+                        "INNER JOIN PSICOLOGO p " +
+                        "ON h.id_psicologo = p.id_psicologo " +
+
+                        "INNER JOIN USUARIO uPsi " +
+                        "ON p.id_usuario = uPsi.id_usuario " +
+
+                        "INNER JOIN PACIENTE pa " +
+                        "ON c.id_paciente = pa.id_paciente " +
+
+                        "INNER JOIN USUARIO uPac " +
+                        "ON pa.id_usuario = uPac.id_usuario " +
+
+                        "WHERE p.id_usuario = ? " +
+
+                        "ORDER BY h.fecha DESC, h.hora_inicio DESC";
+
+        try (
+                Connection con = ConexionBD.getConexion();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+
+            ps.setInt(1, idUsuario);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Cita c = new Cita();
+
+                    c.setIdCita(
+                            rs.getInt("id_cita")
+                    );
+
+                    c.setIdPaciente(
+                            rs.getInt("id_paciente")
+                    );
+
+                    c.setMotivo(
+                            rs.getString("motivo_consulta")
+                    );
+
+                    c.setEstado(
+                            rs.getString("estado")
+                    );
+
+                    c.setFechaHora(
+                            rs.getTimestamp("fecha_hora")
+                    );
+
+                    c.setNombrePsicologo(
+                            rs.getString("nombre_psicologo")
+                    );
+
+                    c.setApellidoPsicologo(
+                            rs.getString("apellido_psicologo")
+                    );
+
+                    c.setNombrePaciente(
+                            rs.getString("nombre_paciente")
+                    );
+
+                    c.setApellidoPaciente(
+                            rs.getString("apellido_paciente")
+                    );
+
+                    lista.add(c);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.err.println(
+                    "Error al obtener citas del psicólogo: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
 }

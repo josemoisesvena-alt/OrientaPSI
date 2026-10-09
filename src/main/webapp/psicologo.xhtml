@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="jakarta.faces.html"
+        xmlns:f="jakarta.faces.core">
+
+<h:head>
+
+    <meta charset="UTF-8"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1"/>
+
+    <title>
+        OrientaPsi - Psicólogo
+    </title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"/>
+
+    <style>
+
+        body {
+            background-color: #f4f6f8;
+        }
+
+        .main-card {
+            border-radius: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+    </style>
+
+</h:head>
+
+
+<h:body>
+
+
+    <!-- ========================================= -->
+    <!-- NAVBAR -->
+    <!-- ========================================= -->
+
+    <nav class="navbar navbar-dark bg-primary">
+
+        <div class="container">
+
+            <span class="navbar-brand fw-bold">
+                OrientaPsi - Psicólogo
+            </span>
+
+
+            <div class="d-flex align-items-center">
+
+                <span class="text-white me-3">
+
+                    #{loginBean.usuarioLogueado.nombres}
+                    #{loginBean.usuarioLogueado.apellidos}
+
+                </span>
+
+
+                <h:form>
+
+                    <h:commandButton
+                            value="Cerrar Sesión"
+                            action="#{loginBean.cerrarSesion}"
+                            styleClass="btn btn-outline-light btn-sm"/>
+
+                </h:form>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <div class="container py-5">
+
+
+        <!-- ========================================= -->
+        <!-- BIENVENIDA -->
+        <!-- ========================================= -->
+
+        <div class="card shadow-sm border-0 main-card mb-4">
+
+            <div class="card-body p-4">
+
+                <h2 class="text-primary fw-bold">
+
+                    Panel del Psicólogo
+
+                </h2>
+
+
+                <p class="mb-0">
+
+                    Bienvenido:
+
+                    <strong>
+
+                        #{loginBean.usuarioLogueado.nombres}
+                        #{loginBean.usuarioLogueado.apellidos}
+
+                    </strong>
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- ========================================= -->
+        <!-- MIS CITAS ASIGNADAS -->
+        <!-- ========================================= -->
+
+        <div class="card shadow-sm border-0 main-card">
+
+            <div class="card-header bg-white p-4">
+
+                <h4 class="mb-1 fw-bold">
+
+                    Mis Citas Asignadas
+
+                </h4>
+
+                <p class="text-muted mb-0">
+
+                    Consulta las citas relacionadas
+                    con tus horarios de atención.
+
+                </p>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+
+                <div class="table-container">
+
+
+                    <h:dataTable
+                            value="#{psicologoBean.misCitas}"
+                            var="c"
+                            styleClass="table table-hover table-bordered align-middle">
+
+
+                        <!-- ID -->
+
+                        <h:column>
+
+                            <f:facet name="header">
+                                ID
+                            </f:facet>
+
+                            #{c.idCita}
+
+                        </h:column>
+
+
+                        <!-- FECHA -->
+
+                        <h:column>
+
+                            <f:facet name="header">
+                                Fecha y Hora
+                            </f:facet>
+
+                            #{c.fechaHora}
+
+                        </h:column>
+
+
+                        <!-- PACIENTE -->
+
+                        <h:column>
+
+                            <f:facet name="header">
+                                Paciente
+                            </f:facet>
+
+                            #{c.nombrePaciente}
+                            #{c.apellidoPaciente}
+
+                        </h:column>
+
+
+                        <!-- MOTIVO -->
+
+                        <h:column>
+
+                            <f:facet name="header">
+                                Motivo
+                            </f:facet>
+
+                            #{c.motivo}
+
+                        </h:column>
+
+
+                        <!-- ESTADO -->
+
+                        <h:column>
+
+                            <f:facet name="header">
+                                Estado
+                            </f:facet>
+
+
+                            <h:panelGroup
+                                    rendered="#{c.estado eq 'PENDIENTE'}">
+
+                                <span class="badge bg-warning text-dark">
+
+                                    PENDIENTE
+
+                                </span>
+
+                            </h:panelGroup>
+
+
+                            <h:panelGroup
+                                    rendered="#{c.estado eq 'CONFIRMADA'}">
+
+                                <span class="badge bg-success">
+
+                                    CONFIRMADA
+
+                                </span>
+
+                            </h:panelGroup>
+
+
+                            <h:panelGroup
+                                    rendered="#{c.estado eq 'CANCELADA'}">
+
+                                <span class="badge bg-danger">
+
+                                    CANCELADA
+
+                                </span>
+
+                            </h:panelGroup>
+
+
+                        </h:column>
+
+
+                    </h:dataTable>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+</h:body>
+
+</html>
